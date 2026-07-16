@@ -1,5 +1,5 @@
 # MATLAB-Nozzle-simulation-Turbulence-Using-Baldwin-Lomax-turbulence-modelling-
-# MATLAB Framework for Simulation of Compressible Axisymmetric Nozzle Flows
+
 
 A finite-volume MATLAB framework developed for the numerical simulation of compressible flow through axisymmetric convergent-divergent rocket nozzles.
 
