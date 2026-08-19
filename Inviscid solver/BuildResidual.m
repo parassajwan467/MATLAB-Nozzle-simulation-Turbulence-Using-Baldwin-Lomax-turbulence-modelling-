@@ -35,7 +35,8 @@ viscFlux = ComputeViscousFlux(visc);
 
 H = zeros(mesh.nxc,mesh.nrc,4);
 
-H(:,:,3)=prim.p + visc.tau_yy_cell;
+% In BuildResidual.m, change the H definition to:
+H(:,:,3) = (prim.p + visc.tau_yy_cell) ./ mesh.rCell;
 
 %% ------------------------------------------------------------
 % Allocate Residual
@@ -53,8 +54,8 @@ for i=2:mesh.nxc-1
 
     for j=2:mesh.nrc-1
 
-        V = mesh.CellArea(i,j);
-
+        %V = mesh.CellArea(i,j);
+        V = mesh.rCell(i,j)*mesh.CellArea(i,j);   % was: V = mesh.CellArea(i,j);
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% EAST FACE
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -199,8 +200,30 @@ Non_Viscous_Residual(i,j,:) = reshape(ConvectiveResidual + squeeze(H(i,j,:)) ...
 
 end
 Viscous_Residual = Build_Viscous_Residual(mesh,viscFlux);
+%fprintf('\n');
+%fprintf('Max Convective Residual = %e\n', ...
+%    max(abs(Non_Viscous_Residual(:))));
+%fprintf('Max Viscous Residual    = %e\n', ...
+  %  max(abs(Viscous_Residual(:))));
+%fprintf('\n');
+%fprintf('Max Convective = %e\n', max(abs(Non_Viscous_Residual(:))));
+%fprintf('Max Viscous    = %e\n', max(abs(Viscous_Residual(:))));
+%fprintf('Max Total      = %e\n', max(abs((Non_Viscous_Residual + Viscous_Residual))));
 
 Residual = Non_Viscous_Residual + Viscous_Residual;
+
+%fprintf('\n');
+%fprintf('Max Non-Viscous Residual = %e\n', ...
+   % max(abs(Non_Viscous_Residual(:))));
+
+%fprintf('Max Viscous Residual     = %e\n', ...
+   % max(abs(Viscous_Residual(:))));
+
+
+    %figure
+    %imagesc(log10(abs(Viscous_Residual(:,:,2))+1))
+    %colorbar
+    %title('Viscous Residual')
 
 
 end
