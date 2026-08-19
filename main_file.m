@@ -11,9 +11,9 @@ T0 = 555;
 
 gamma = 1.4;
 
-CFL = 0.01;%try 0.01
+CFL = 0.01;
 
-MaxIter = 900;
+MaxIter = 50;
 
 ResidualTolerance = 1e-8;
 
@@ -69,18 +69,26 @@ for iter = 1:MaxIter
     %% --------------------------------------------------------
 
     prim = PrimitiveFromW(W);
-
+    % --- viscous properties for the timestep stability limit ---
+    grad = ComputeGradients(mesh,prim);
+    visc = ComputeViscousProperties(mesh,prim,grad);
     %% --------------------------------------------------------
     % Time Step
     %% --------------------------------------------------------
 
-    [dt,dtLocal] = ComputeTimeStep(mesh,prim,CFL);
+    [dt,dtLocal] = ComputeTimeStep(mesh,prim,visc,CFL);
+
+   % W_old = W;
 
     %% --------------------------------------------------------
     % RK3 Update
     %% --------------------------------------------------------
 
-    W = RK3Step(mesh,W,dt,dtLocal);
+    W = RK3Step(mesh,W,dtLocal);
+
+   % dW = norm(W(:)-W_old(:));
+
+    %fprintf('Iteration %d   ||ΔW|| = %.12e\n',iter,dW);
 
     %% --------------------------------------------------------
     % Updated Primitive Variables
@@ -116,7 +124,7 @@ for iter = 1:MaxIter
     % Monitor Solver
     %% --------------------------------------------------------
 
-    if mod(iter,50)==0
+    if mod(iter,5)==0
 
         fprintf('\n');
         fprintf('Iter = %6d\n',iter);
@@ -156,6 +164,91 @@ grad = ComputeGradients(mesh,prim);
 
 visc = ComputeViscousProperties(mesh,prim,grad);
 
+
+%% ============================================================
+% VISCOSITY DIAGNOSTICS
+%% ============================================================
+
+fprintf('\n========== FINAL VISCOSITY CHECK ==========\n');
+
+fprintf('Max molecular viscosity : %e\n', max(visc.muMole(:)));
+fprintf('Max turbulent viscosity : %e\n', max(visc.muT(:)));
+fprintf('Max total viscosity     : %e\n', max(visc.mu(:)));
+
+fprintf('Max tau_xxE : %e\n', max(abs(visc.tau_xxE(:))));
+fprintf('Max tau_xrE : %e\n', max(abs(visc.tau_xrE(:))));
+fprintf('Max tau_rrE : %e\n', max(abs(visc.tau_rrE(:))));
+fprintf('Max qxE     : %e\n', max(abs(visc.qxE(:))));
+fprintf('Max qrE     : %e\n', max(abs(visc.qrE(:))));
+
+%figure
+
+%contourf(mesh.XC,mesh.YC,visc.muT,40,'LineStyle','none')
+
+%colorbar
+
+%xlabel('x (m)')
+%ylabel('r (m)')
+
+%title('Turbulent Eddy Viscosity')
+
+%figure
+
+%contourf(mesh.XC,mesh.YC,visc.mu,40,'LineStyle','none')
+
+%colorbar
+
+%xlabel('x (m)')
+%ylabel('r (m)')
+
+%title('Total Dynamic Viscosity')
+
+%figure
+
+%plot(mesh.XC(:,end),visc.tau_xrN(:,end),'LineWidth',2)
+
+%grid on
+
+%xlabel('x (m)')
+%ylabel('\tau_w (Pa)')
+
+%title('Wall Shear Stress')
+
+%figure
+
+%plot(prim.u(10,:),mesh.YC(10,:),'LineWidth',2)
+
+%grid on
+
+%xlabel('Velocity (m/s)')
+%ylabel('Radius (m)')
+
+%title('Velocity Profile near Inlet')
+
+%figure
+
+%plot(prim.u(20,:),mesh.YC(20,:),'LineWidth',2)
+
+%grid on
+
+%xlabel('Velocity (m/s)')
+%ylabel('Radius (m)')
+
+%title('Velocity Profile at Throat')
+
+%figure
+
+%plot(prim.u(end-5,:),mesh.YC(end-5,:),'LineWidth',2)
+
+%grid on
+
+%xlabel('Velocity (m/s)')
+%ylabel('Radius (m)')
+
+%title('Velocity Profile near Exit')
+
+
+
 flowFinal.W = W;
 
 flowFinal.rho = prim.rho;
@@ -184,8 +277,8 @@ grid on;
 %% ============================================================
 % POST PROCESSING
 %% ============================================================
-disp(size(flowFinal));
-disp(class(flowFinal));
+%disp(size(flowFinal));
+%disp(class(flowFinal));
 PostProcess(mesh,flowFinal.W,iso,visc);
 
 fprintf('\nSimulation Complete\n');
