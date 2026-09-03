@@ -54,25 +54,21 @@ W = zeros(mesh.nxc,mesh.nrc,4);
 %% ------------------------------------------------------------
 
 for i = 1:mesh.nxc
-
     for j = 1:mesh.nrc
 
-        rho(i,j) = iso.rho(i);
-
-        u(i,j) = iso.u(i);
-
-        v(i,j) = 0.0;
-
-        p(i,j) = iso.P(i);
-
-        T(i,j) = iso.T(i);
-
+        rho(i,j)  = iso.rho(i);
+        p(i,j)    = iso.P(i);
+        T(i,j)    = iso.T(i);
         Mach(i,j) = iso.Mach(i);
+        a(i,j)    = iso.a(i);
 
-        a(i,j) = iso.a(i);
+       wallDist_j = mesh.wallRadiusCell(i) - mesh.YC(i,j);
+delta0 = 0.05 * mesh.wallRadiusCell(i);      % same layer-thickness scale as before
+blend = 1 - exp(-wallDist_j/delta0);          % smooth, asymptotic, no kink
 
+u(i,j) = iso.u(i) * blend;
+v(i,j) = 0.0;                                  % already matches the wall BC exactly, no change needed
     end
-
 end
 
 %% ------------------------------------------------------------
