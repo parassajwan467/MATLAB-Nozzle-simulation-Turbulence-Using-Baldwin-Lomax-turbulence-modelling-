@@ -13,7 +13,7 @@ gamma = 1.4;
 
 CFL = 0.01;
 
-MaxIter = 50;
+MaxIter = 5000;
 
 ResidualTolerance = 1e-8;
 
@@ -42,6 +42,12 @@ iso = IsentropicSolution(mesh,nozzle);
 flow = InitializeFlow(mesh,iso);
 
 W = flow.W;
+%fprintf('Check XC(18,31)   = %.4f mm\n', mesh.XC(18,31)*1000);
+%fprintf('Check YC(18,31)   = %.4f mm\n', mesh.YC(18,31)*1000);
+%fprintf('Check rho(18,31)  = %.4f kg/m3\n', flow.rho(18,31));
+%fprintf('Check u(18,31)    = %.4f m/s\n', flow.u(18,31));
+%fprintf('Check T(18,31)    = %.4f K\n', flow.T(18,31));
+%fprintf('Check p(18,31)    = %.2f Pa\n', flow.p(18,31));
 
 %% ============================================================
 % RESIDUAL HISTORY
